@@ -38,5 +38,51 @@ namespace DeSo1.Controllers
             return RedirectToAction("Index");
             
         }
+
+        public IActionResult Edit(Guid?id)
+        {
+            var spEdit = _db.SanPhams.Find(id);
+            return View(spEdit);
+        }
+        [HttpPost]
+        public IActionResult Edit(Guid? Id, SanPham sanPham, IFormFile imgFile)
+        {
+            //lấy đối tương sp hiện có trong csdl
+            var spEdit = _db.SanPhams.Find(Id);
+            if (spEdit == null)
+            {
+                return NotFound();
+            }
+            //cập nhật các thuộc tính củ đối tượng hiện
+            spEdit.Name = sanPham.Name;
+            spEdit.SoLuong = sanPham.SoLuong;
+
+            //cạp nhật các thuộc tinh khác
+            if (imgFile != null && imgFile.Length > 0)
+            {
+                //định nghĩa đường dẫn để lưu file
+                string fileName = Path.GetFileName(imgFile.FileName);
+                string filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "img", fileName);
+
+                //Kiểm tra và tạo thư mục nếu chưa tồn tại
+                string directory = Path.GetDirectoryName(filePath);
+                if (!Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+                //lưu ảnh mứi
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    imgFile.CopyTo(stream);
+                }
+                //cập nhật thuộc tính imgUrl với tên file mớ
+                spEdit.ImgURL = fileName;
+            }
+                _db.Update(spEdit);
+                _db.SaveChanges();
+                         
+            return RedirectToAction("Index");
+
+        }
     }
 }
